@@ -1,5 +1,10 @@
 import requests
+import smtplib
 #import datetime
+
+MY_EMAIL = "useyouremail"
+MY_PASSWORD = "user your pass"
+MY_RESPONDENT = "useyouremail"
 
 STOCK_NAME = "TSLA"
 COMPANY_NAME = "Tesla Inc"
@@ -8,7 +13,8 @@ COMPANY_NAME = "Tesla Inc"
 STOCK_ENDPOINT = "https://www.alphavantage.co/query"
 NEWS_ENDPOINT = "https://newsapi.org/v2/everything"
 
-STOCK_API_KEY = "QJZ19VGJ15RB65O6"
+STOCK_API_KEY = "useyourkey"
+NEWS_API_KEY = "useyourkey"
 
 # Fetching yesterday's close price.
 stock_params = {
@@ -37,6 +43,26 @@ print(difference)
 diff_percent = (difference / float(yesterday_closing_price)) * 100
 print(diff_percent)
 
-#If diff_percent is greater than 5 then print("Get News")
-if diff_percent > 5:
-    print("Get News")
+#If diff_percent is greater than 5 then get 3articles related to company name
+if diff_percent > 0.25:
+    news_params = {
+        "apiKey": NEWS_API_KEY,
+        "qInTitle": COMPANY_NAME,
+    }
+
+    news_response = requests.get(NEWS_ENDPOINT, params=news_params)
+    articles = news_response.json()["articles"]
+    three_articles = articles[:3]
+    print(three_articles)
+
+    titles_list = [f"Headline: {article['title']}. \n URL: {article['url']}" for article in three_articles]
+    print(titles_list)
+
+
+    with smtplib.SMTP("smtp.gmail.com", 587) as connection:
+        connection.starttls()
+        connection.login(MY_EMAIL, MY_PASSWORD)
+        connection.sendmail(from_addr=MY_EMAIL,
+                            to_addrs=MY_RESPONDENT,
+                            msg=f"Subject: Latest articles on {COMPANY_NAME} due to recent stock changes\n\n"
+                                f" {titles_list}")
